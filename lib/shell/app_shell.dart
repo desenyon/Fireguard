@@ -7,7 +7,7 @@ import '../ui/map/map_view.dart';
 import '../ui/report/report_view.dart';
 import '../ui/ai/ai_companion_view.dart';
 
-final bottomIndexProvider = StateProvider<int>((ref) => 4);
+final bottomIndexProvider = StateProvider<int>((ref) => 0);
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});

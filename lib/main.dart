@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fireguard',
       theme: baseDark.copyWith(
+        
         scaffoldBackgroundColor: AppPalette.screenBackground,
         colorScheme: baseDark.colorScheme.copyWith(
           primary: AppPalette.orange,
