@@ -17,7 +17,7 @@ class AiViewModel extends StateNotifier<List<AiMessage>> {
   void send(String text) {
     if (text.trim().isEmpty) return;
     state = [...state, AiMessage(role: MessageRole.user, text: text)];
-    // Placeholder assistant echo. Later integrate Gemini.
+   
     state = [...state, AiMessage(role: MessageRole.assistant, text: 'Thanks, I\'ll get back with guidance.')];
   }
 }
@@ -60,18 +60,23 @@ class _AiCompanionViewState extends ConsumerState<AiCompanionView> {
                 final isUser = m.role == MessageRole.user;
                 return Align(
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-                    decoration: BoxDecoration(
-                      color: isUser ? AppPalette.orange : AppPalette.mediumGray,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      m.text,
-                      style: TextStyle(color: isUser ? AppPalette.white : AppPalette.white, fontSize: 15),
-                    ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(child: Text(m.role == MessageRole.user ? 'U' : 'A')),
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                        decoration: BoxDecoration(
+                          color: isUser ? AppPalette.orange : AppPalette.mediumGray,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          m.text,
+                          style: TextStyle(color: isUser ? AppPalette.white : AppPalette.white, fontSize: 15),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
