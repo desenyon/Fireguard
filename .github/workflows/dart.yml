@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-obs:
+jobs:
   build:
     name: Build Flutter APK
     runs-on: ubuntu-latest
