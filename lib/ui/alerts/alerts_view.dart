@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
+import '../auth/user_profile_widget.dart';
 
 class AlertItem {
   final String name;
@@ -55,6 +56,8 @@ class AlertsView extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const UserProfileWidget(),
+          const SizedBox(height: 16),
           const _SectionTitle('Recent Alerts'),
           const SizedBox(height: 8),
           for (final a in s.alerts) _AlertCard(item: a),
