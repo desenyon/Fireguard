@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/constants/palette.dart';
+import '../../services/firms_service.dart';
 
 class MapView extends StatelessWidget {
   const MapView({super.key});
@@ -73,6 +74,22 @@ class MapView extends StatelessWidget {
                     child: Icon(Icons.add, color: Colors.white),
                   ),
                 ),
+              ),
+            ),
+          ),
+          // FIRMS API Test Button
+          Positioned(
+            top: 80,
+            right: 16,
+            child: SafeArea(
+              bottom: false,
+              child: FloatingActionButton(
+                onPressed: () async {
+                  print('🔥 Testing FIRMS API...');
+                  await FIRMSService.fetchLatestGlobalFireData();
+                },
+                backgroundColor: AppPalette.orange,
+                child: const Icon(Icons.local_fire_department, color: Colors.white),
               ),
             ),
           ),

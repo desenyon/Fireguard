@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
+import 'package:flutter/services.dart';
+import '../../services/gemini_service.dart';
 
 final aiMessagesProvider = StateNotifierProvider<AiViewModel, List<AiMessage>>((ref) {
   return AiViewModel(
@@ -14,11 +16,39 @@ final aiMessagesProvider = StateNotifierProvider<AiViewModel, List<AiMessage>>((
 class AiViewModel extends StateNotifier<List<AiMessage>> {
   AiViewModel({List<AiMessage>? initial}) : super(initial ?? <AiMessage>[]);
 
-  void send(String text) {
+  Future<void> send(String text) async {
     if (text.trim().isEmpty) return;
+    
+    // Add user message
     state = [...state, AiMessage(role: MessageRole.user, text: text)];
-   
-    state = [...state, AiMessage(role: MessageRole.assistant, text: 'Thanks, I\'ll get back with guidance.')];
+    
+    // Check if the message is fire safety related
+    if (false) {
+      state = [...state, AiMessage(
+        role: MessageRole.assistant, 
+        text: "I'm specialized in fire safety and emergency preparedness. I can help you with questions about wildfires, evacuation planning, breathing through smoke, emergency supplies, and other fire safety topics. What fire safety question can I help you with?"
+      )];
+      return;
+    }
+    
+    // Add loading message
+    state = [...state, AiMessage(role: MessageRole.assistant, text: 'Thinking about your fire safety question...')];
+    
+    try {
+      // Get response from Gemini
+      final response = await GeminiService.generateResponse(text);
+      
+      // Remove loading message and add actual response
+      state = state.take(state.length - 1).toList();
+      state = [...state, AiMessage(role: MessageRole.assistant, text: response)];
+    } catch (e) {
+      // Remove loading message and add error response
+      state = state.take(state.length - 1).toList();
+      state = [...state, AiMessage(
+        role: MessageRole.assistant, 
+        text: "I'm having trouble connecting right now. Please try again in a moment. I'm here to help with fire safety questions when I'm back online."
+      )];
+    }
   }
 }
 
@@ -61,21 +91,39 @@ class _AiCompanionViewState extends ConsumerState<AiCompanionView> {
                 return Align(
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Row(
-                    children: [
-                      CircleAvatar(child: Text(m.role == MessageRole.user ? 'U' : 'A')),
+                    mainAxisSize: MainAxisSize.min,
+                    children: !isUser ? [
+                      CircleAvatar(child: Text('U')),
+                      const SizedBox(width: 8),
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
                         decoration: BoxDecoration(
-                          color: isUser ? AppPalette.orange : AppPalette.mediumGray,
+                          color: AppPalette.mediumGray,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
                           m.text,
-                          style: TextStyle(color: isUser ? AppPalette.white : AppPalette.white, fontSize: 15),
+                          style: const TextStyle(color: AppPalette.white, fontSize: 15),
                         ),
                       ),
+                    ] : [
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                        decoration: BoxDecoration(
+                          color: AppPalette.orange,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          m.text,
+                          style: const TextStyle(color: AppPalette.white, fontSize: 15),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      CircleAvatar(child: Text('A')),
                     ],
                   ),
                 );
@@ -124,9 +172,11 @@ class _AiCompanionViewState extends ConsumerState<AiCompanionView> {
     );
   }
 
-  void _onSubmit(String value) {
-    ref.read(aiMessagesProvider.notifier).send(value);
+  void _onSubmit(String value) async {
+     SystemChannels.textInput.invokeMethod('TextInput.hide');
     _controller.clear();
+    await ref.read(aiMessagesProvider.notifier).send(value);
+   
   }
 }
 

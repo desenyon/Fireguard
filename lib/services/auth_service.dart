@@ -12,7 +12,7 @@ class AuthService {
   // Guard flag to avoid overlapping interactive sign-in flows.
   static bool _interactiveInProgress = false;
 
-  // Initialize Google Sign-In (must be called exactly once before use)
+
   // You can call this from your app startup (e.g. before runApp) or lazily
   // before first authenticate. Safe to call multiple times if guarded by
   // the internal _initialized flag.

@@ -6,13 +6,18 @@ import 'firebase_options.dart';
 import 'shell/app_shell.dart';
 import 'providers/auth_provider.dart';
 import 'ui/auth/login_view.dart';
+import 'package:fireguard/services/firms_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    await FIRMSService.fetchFireData();
   }
   runApp(const ProviderScope(child: MyApp()));
 }
