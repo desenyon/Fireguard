@@ -1,17 +1,17 @@
 class FireHotspot {
   final double latitude;
   final double longitude;
-  final double brightness;        // Brightness temperature (Kelvin)
-  final double scan;              // Scan pixel size
-  final double track;             // Track pixel size
-  final String acqDate;           // Acquisition date
-  final String acqTime;           // Acquisition time
-  final String satellite;         // Satellite name
-  final String confidence;        // Confidence: low, nominal, high
-  final String version;           // Version
-  final double brightT31;         // Brightness temperature channel 31
-  final double frp;               // Fire Radiative Power (MW)
-  final String dayNight;          // Day or Night
+  final double brightness;       
+  final double scan;              
+  final double track;             
+  final String acqDate;           
+  final String acqTime;         
+  final String satellite;         
+  final String confidence;        
+  final String version;           
+  final double brightT31;         
+  final double frp;               
+  final String dayNight;          
 
   FireHotspot({
     required this.latitude,
