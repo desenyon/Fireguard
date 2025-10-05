@@ -56,7 +56,7 @@ Keep responses concise, helpful, and focused on practical fire safety advice.
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          'x-goog-api-key': 'AIzaSyC1eX7WfMc2CtrwDeCjnuyrZMRLWvcqKiU',
+          'x-goog-api-key': _apiKey,
         },
         body: jsonEncode(requestBody),
       );

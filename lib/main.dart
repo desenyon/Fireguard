@@ -8,18 +8,48 @@ import 'providers/auth_provider.dart';
 import 'ui/auth/login_view.dart';
 import 'package:fireguard/services/firms_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geolocator/geolocator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   
+  // Request location permissions
+  await _requestLocationPermissions();
+  
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    await FIRMSService.fetchFireData();
+    // await FIRMSService.fetchFireData();
   }
   runApp(const ProviderScope(child: MyApp()));
+}
+
+Future<void> _requestLocationPermissions() async {
+  // Check if location services are enabled
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    print('Location services are disabled.');
+    return;
+  }
+
+  // Check location permissions
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print('Location permissions are denied');
+      return;
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    print('Location permissions are permanently denied');
+    return;
+  }
+
+  print('Location permissions granted');
 }
 
 class MyApp extends ConsumerWidget {
