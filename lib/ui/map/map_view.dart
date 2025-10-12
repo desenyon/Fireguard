@@ -17,8 +17,8 @@ class _MapViewState extends State<MapView> {
   List<FireHotspot> fireHotspots = [];
   bool isLoading = false;
   bool showAllAnomalies = false; 
-  int _activeRequestId = 0; // Tracks the latest data fetch to ignore stale responses
-  bool _disposed = false;   // Extra defensive flag (mounted is usually enough)
+  int _activeRequestId = 0; 
+  bool _disposed = false;   
   
   // Location-related variables
   LatLng? userLocation;

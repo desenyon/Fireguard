@@ -4,7 +4,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/constants/palette.dart';
-import '../../models/report_model.dart';
+import 'package:fireguard/models/report_model.dart';
+
 
 class ReportViewModel extends StateNotifier<ReportState> {
   ReportViewModel() : super(const ReportState());
@@ -13,17 +14,19 @@ class ReportViewModel extends StateNotifier<ReportState> {
   
   void setSelectedLocation(LatLng location) => state = state.copyWith(selectedLocation: location);
   
+  void setExpectedRadius(double radius) => state = state.copyWith(expectedRadius: radius);
+  
   Future<void> getCurrentLocation() async {
     state = state.copyWith(isLoadingLocation: true);
     
     try {
-      // Check if location services are enabled
+     
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw Exception('Location services are disabled.');
       }
 
-      // Check location permissions
+  
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -36,7 +39,7 @@ class ReportViewModel extends StateNotifier<ReportState> {
         throw Exception('Location permissions are permanently denied');
       }
 
-      // Get current position
+  
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -55,6 +58,110 @@ class ReportViewModel extends StateNotifier<ReportState> {
   
   Future<void> submit() async {
     // TODO: Implement report submission
+  }
+  
+  Future<void> showRadiusDialog(BuildContext context) async {
+    final TextEditingController radiusController = TextEditingController();
+    
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppPalette.backgroundDarker,
+          title: const Text(
+            'Expected Radius',
+            style: TextStyle(color: AppPalette.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'What is the expected radius of the fire/smoke area?',
+                style: TextStyle(color: AppPalette.lightGray),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: radiusController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppPalette.white),
+                decoration: const InputDecoration(
+                  labelText: 'Radius (meters)',
+                  labelStyle: TextStyle(color: AppPalette.lightGray),
+                  hintText: 'e.g., 100',
+                  hintStyle: TextStyle(color: AppPalette.placeholderText),
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppPalette.mediumGray),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppPalette.orange),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppPalette.lightGray),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final radiusText = radiusController.text.trim();
+                if (radiusText.isNotEmpty) {
+                  final radius = double.tryParse(radiusText);
+                  if (radius != null && radius > 0) {
+                    setExpectedRadius(radius);
+                    Navigator.of(context).pop();
+                    // Show success message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Report submitted with ${radius}m radius',
+                          style: const TextStyle(color: AppPalette.white),
+                        ),
+                        backgroundColor: AppPalette.orange,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please enter a valid radius',
+                          style: TextStyle(color: AppPalette.white),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please enter a radius',
+                        style: TextStyle(color: AppPalette.white),
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppPalette.orange,
+                foregroundColor: AppPalette.white,
+              ),
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -220,7 +327,7 @@ class ReportView extends ConsumerWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 4,
                       ),
-                      onPressed: () => ref.read(reportProvider.notifier).submit(),
+                      onPressed: () => ref.read(reportProvider.notifier).showRadiusDialog(context),
                       child: const Text('Report Smoke Here', style: TextStyle(color: AppPalette.white, fontSize: 16, fontWeight: FontWeight.w700)),
                     ),
                   ),

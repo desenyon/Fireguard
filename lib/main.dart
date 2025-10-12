@@ -27,7 +27,7 @@ Future<void> main() async {
 }
 
 Future<void> _requestLocationPermissions() async {
-  // Check if location services are enabled
+  await Geolocator.requestPermission();
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
     print('Location services are disabled.');

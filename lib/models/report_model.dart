@@ -5,12 +5,14 @@ class ReportState {
   final LatLng? currentLocation;
   final LatLng? selectedLocation;
   final bool isLoadingLocation;
+  final double? expectedRadius;
   
   const ReportState({
     this.description = '',
     this.currentLocation,
     this.selectedLocation,
     this.isLoadingLocation = false,
+    this.expectedRadius,
   });
   
   ReportState copyWith({
@@ -18,11 +20,13 @@ class ReportState {
     LatLng? currentLocation,
     LatLng? selectedLocation,
     bool? isLoadingLocation,
+    double? expectedRadius,
   }) => ReportState(
     description: description ?? this.description,
     currentLocation: currentLocation ?? this.currentLocation,
     selectedLocation: selectedLocation ?? this.selectedLocation,
     isLoadingLocation: isLoadingLocation ?? this.isLoadingLocation,
+    expectedRadius: expectedRadius ?? this.expectedRadius,
   );
 }
 
