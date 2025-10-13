@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -5,6 +8,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/constants/palette.dart';
 import 'package:fireguard/models/report_model.dart';
+import 'package:fireguard/services/report_service.dart';
+import 'package:fireguard/providers/auth_provider.dart';
+
 
 
 class ReportViewModel extends StateNotifier<ReportState> {
@@ -56,11 +62,27 @@ class ReportViewModel extends StateNotifier<ReportState> {
     }
   }
   
-  Future<void> submit() async {
-    // TODO: Implement report submission
+  Future<void> submit(WidgetRef ref) async {
+    final selected = state.selectedLocation;
+    dev.log('Submitting report: $state');
+    if (selected == null) {
+      throw Exception('No location selected');
+    }
+    final email = ref.read(userEmailProvider);
+    if (email == null || email.isEmpty) {
+      throw Exception('User not signed in');
+    }
+    dev.log('Submitting report for $email at (${selected.latitude}, ${selected.longitude}) with radius ${state.expectedRadius}m');
+    await ReportService.createReport(
+      latitude: selected.latitude,
+      longitude: selected.longitude,
+      reportedByEmail: email,
+      description: state.description.isEmpty ? null : state.description,
+      radiusMeters: state.expectedRadius,
+    );
   }
-  
-  Future<void> showRadiusDialog(BuildContext context) async {
+
+  Future<void> showRadiusDialog(BuildContext context, WidgetRef ref) async {
     final TextEditingController radiusController = TextEditingController();
     
     return showDialog<void>(
@@ -112,23 +134,41 @@ class ReportViewModel extends StateNotifier<ReportState> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final radiusText = radiusController.text.trim();
                 if (radiusText.isNotEmpty) {
                   final radius = double.tryParse(radiusText);
                   if (radius != null && radius > 0) {
                     setExpectedRadius(radius);
-                    Navigator.of(context).pop();
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Report submitted with ${radius}m radius',
-                          style: const TextStyle(color: AppPalette.white),
-                        ),
-                        backgroundColor: AppPalette.orange,
-                      ),
-                    );
+                    try {
+                      dev.log('Radius set to $radius meters');
+                      await ref.read(reportProvider.notifier).submit(ref);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Report submitted with ${radius}m radius',
+                              style: const TextStyle(color: AppPalette.white),
+                            ),
+                            backgroundColor: AppPalette.orange,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        dev.log('Error submitting report: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Failed to submit: $e',
+                              style: const TextStyle(color: AppPalette.white),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -327,7 +367,7 @@ class ReportView extends ConsumerWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 4,
                       ),
-                      onPressed: () => ref.read(reportProvider.notifier).showRadiusDialog(context),
+                      onPressed: () => ref.read(reportProvider.notifier).showRadiusDialog(context, ref),
                       child: const Text('Report Smoke Here', style: TextStyle(color: AppPalette.white, fontSize: 16, fontWeight: FontWeight.w700)),
                     ),
                   ),
