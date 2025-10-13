@@ -9,14 +9,15 @@ import 'ui/auth/login_view.dart';
 import 'package:fireguard/services/firms_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
+import 'services/user_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  
+
   // Request location permissions
   await _requestLocationPermissions();
-  
+
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -57,12 +58,15 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ThemeData baseDark = ThemeData(brightness: Brightness.dark, useMaterial3: true,splashColor: Colors.transparent);
-    
+    final ThemeData baseDark = ThemeData(
+      brightness: Brightness.dark,
+      useMaterial3: true,
+      splashColor: Colors.transparent,
+    );
+
     return MaterialApp(
       title: 'Fireguard',
       theme: baseDark.copyWith(
-        
         scaffoldBackgroundColor: AppPalette.screenBackground,
         colorScheme: baseDark.colorScheme.copyWith(
           primary: AppPalette.orange,
@@ -77,7 +81,7 @@ class MyApp extends ConsumerWidget {
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppPalette.navBarBackground,
           selectedItemColor: AppPalette.white,
-        
+
           unselectedItemColor: AppPalette.lightGray,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
@@ -99,6 +103,8 @@ class AuthWrapper extends ConsumerWidget {
     return userAsync.when(
       data: (user) {
         if (user != null) {
+          // Kick off background sync of user record (email, location, token)
+          UserService.syncSignedInUser();
           return const AppShell();
         } else {
           return const LoginView();
@@ -118,11 +124,7 @@ class AuthWrapper extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppPalette.red,
-              ),
+              Icon(Icons.error_outline, size: 64, color: AppPalette.red),
               const SizedBox(height: 16),
               Text(
                 'Authentication Error',
@@ -135,10 +137,7 @@ class AuthWrapper extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 error.toString(),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppPalette.lightGray,
-                ),
+                style: TextStyle(fontSize: 16, color: AppPalette.lightGray),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),

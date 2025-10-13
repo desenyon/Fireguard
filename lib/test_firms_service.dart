@@ -10,10 +10,6 @@ void main() async {
   print('\n📡 Test 1: Fetching most recent global fire data...');
   await FIRMSService.fetchLatestGlobalFireData();
   
-  // Test 2: Fetch fire data for a specific date (if you want to test with a specific date)
-  // Uncomment the line below and replace with a valid date
-  // print('\n📡 Test 2: Fetching fire data for specific date...');
-  // await FIRMSService.fetchFireDataForDate('2025-01-15');
   
   // Test 3: Fetch fire data for a specific area (e.g., California)
   print('\n📡 Test 3: Fetching fire data for California area...');
@@ -26,6 +22,7 @@ void main() async {
   
   print('\n✅ FIRMS Service Test Complete');
 }
+
 
 
 

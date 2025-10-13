@@ -43,10 +43,14 @@ dependencies:
   riverpod: ^2.6.1
   http: ^1.1.0
   geolocator: ^14.0.2
+  
  
   flutter_dotenv: ^6.0.0
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  cloud_firestore: ^6.0.2
+  firebase_messaging: ^16.0.2
+  flutter_compass: ^0.8.1
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_compass/flutter_compass.dart';
+import 'dart:async';
 import '../../utils/constants/palette.dart';
 
 class CompassState {
@@ -25,15 +27,29 @@ class CompassState {
 }
 
 class CompassViewModel extends StateNotifier<CompassState> {
+  StreamSubscription? _compassSub;
+
   CompassViewModel()
       : super(const CompassState(
           headingDegrees: 315, // NW as default
           windFromLabel: 'Northwest',
           riskLabel: 'Highest Risk',
           guidance: 'Head Southeast for cleaner air.',
-        ));
+        )) {
+    _startCompass();
+  }
 
-  // Call this from real sensors later
+  void _startCompass() {
+    _compassSub?.cancel();
+    _compassSub = FlutterCompass.events?.listen((event) {
+      final double? heading = event.heading;
+      if (heading == null) return;
+      // Keep UI the same, only update heading degrees.
+      updateHeading(heading);
+    });
+  }
+
+  // Can be used for external/manual updates if needed.
   void updateHeading(double degrees, {String? windFrom, String? risk, String? tip}) {
     state = state.copyWith(
       headingDegrees: degrees % 360,
@@ -41,6 +57,12 @@ class CompassViewModel extends StateNotifier<CompassState> {
       riskLabel: risk,
       guidance: tip,
     );
+  }
+
+  @override
+  void dispose() {
+    _compassSub?.cancel();
+    super.dispose();
   }
 }
 
