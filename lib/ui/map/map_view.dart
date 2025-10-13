@@ -5,15 +5,19 @@ import 'package:geolocator/geolocator.dart';
 import '../../utils/constants/palette.dart';
 import '../../services/firms_service.dart';
 import '../../models/fire_hotspot.dart';
+import '../../services/evacuation_routing_service.dart';
+import '../../services/user_presence_service.dart';
+import '../../providers/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MapView extends StatefulWidget {
+class MapView extends ConsumerStatefulWidget {
   const MapView({super.key});
 
   @override
-  State<MapView> createState() => _MapViewState();
+  ConsumerState<MapView> createState() => _MapViewState();
 }
 
-class _MapViewState extends State<MapView> {
+class _MapViewState extends ConsumerState<MapView> {
   List<FireHotspot> fireHotspots = [];
   bool isLoading = false;
   bool showAllAnomalies = false; 
@@ -24,6 +28,8 @@ class _MapViewState extends State<MapView> {
   LatLng? userLocation;
   bool isLocationLoading = false;
   MapController mapController = MapController();
+  List<LatLng> _evacuationRoute = [];
+  bool _isRouting = false;
 
   @override
   void initState() {
@@ -89,6 +95,23 @@ class _MapViewState extends State<MapView> {
       }
 
       print('📍 User location: ${position.latitude}, ${position.longitude}');
+
+      // Save presence with FCM token and geohash
+      try {
+        final uid = ref.read(currentUserProvider).value?.uid;
+        if (uid != null) {
+          await UserPresenceService.instance.requestPermissions();
+          await UserPresenceService.instance.savePresence(
+            uid: uid,
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+        }
+      } catch (e) {
+        // ignore errors
+      }
+
+      // Proximity alerts will be handled by backend push notifications.
     } catch (e) {
       print('Error getting location: $e');
       if (!mounted) return;
@@ -119,6 +142,8 @@ class _MapViewState extends State<MapView> {
         isLoading = false;
       });
       print('🗺️ Loaded ${hotspots.length} fire hotspots on map (request $requestId)');
+
+      // Proximity alerts are now handled by backend push notifications.
     } catch (e) {
       print('Error loading fire data: $e');
       if (!mounted || _disposed || requestId != _activeRequestId) return;
@@ -181,6 +206,16 @@ class _MapViewState extends State<MapView> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.fireguard',
                 ),
+                if (_evacuationRoute.isNotEmpty)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: _evacuationRoute,
+                        color: Colors.cyanAccent,
+                        strokeWidth: 5,
+                      ),
+                    ],
+                  ),
                 MarkerLayer(
                   markers: [
                     // User location marker
@@ -357,6 +392,31 @@ class _MapViewState extends State<MapView> {
                   },
                   backgroundColor: Colors.blue,
                   child: const Icon(Icons.my_location, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+
+          // Evacuate button
+          if (userLocation != null)
+            Positioned(
+              top: 220,
+              right: 16,
+              child: SafeArea(
+                bottom: false,
+                child: FloatingActionButton(
+                  mini: false,
+                  onPressed: _isRouting ? null : _computeAndDrawEvacuation,
+                  backgroundColor: Colors.green,
+                  child: _isRouting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.directions_walk, color: Colors.white, size: 22),
                 ),
               ),
             ),
@@ -581,5 +641,45 @@ class _MapViewState extends State<MapView> {
         ],
       ),
     );
+  }
+
+  Future<void> _computeAndDrawEvacuation() async {
+    if (userLocation == null) return;
+    if (fireHotspots.isEmpty) return;
+    _safeSetState(() {
+      _isRouting = true;
+    });
+
+    try {
+      final LatLng safeTarget = EvacuationRoutingService.computeSafeTarget(
+        user: userLocation!,
+        hotspots: fireHotspots,
+        moveAwayKm: 3.0,
+      );
+
+      final List<LatLng> route = await EvacuationRoutingService.getWalkingRoute(
+        start: userLocation!,
+        end: safeTarget,
+      );
+
+      if (!_disposed && mounted) {
+        _safeSetState(() {
+          _evacuationRoute = route;
+          _isRouting = false;
+        });
+        if (route.isNotEmpty) {
+          mapController.fitCamera(CameraFit.coordinates(
+            padding: const EdgeInsets.all(24),
+            coordinates: route,
+          ));
+        }
+      }
+    } catch (e) {
+      if (!_disposed && mounted) {
+        _safeSetState(() {
+          _isRouting = false;
+        });
+      }
+    }
   }
 }

@@ -51,6 +51,8 @@ dependencies:
   cloud_firestore: ^6.0.2
   firebase_messaging: ^16.0.2
   flutter_compass: ^0.8.1
+  dart_geohash: ^2.1.0
+
 
 dev_dependencies:
   flutter_test:
