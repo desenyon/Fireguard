@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
 import 'package:flutter/services.dart';
 import '../../services/gemini_service.dart';
+import '../menu/menu_view.dart';
 
 final aiMessagesProvider = StateNotifierProvider<AiViewModel, List<AiMessage>>((ref) {
   return AiViewModel(
@@ -77,6 +78,18 @@ class _AiCompanionViewState extends ConsumerState<AiCompanionView> {
       appBar: AppBar(
         title: const Text('AI Companion'),
         backgroundColor: AppPalette.backgroundDarker,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MenuView(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.menu),
+          ),
+        ],
       ),
       backgroundColor: AppPalette.screenBackground,
       body: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
 import '../auth/user_profile_widget.dart';
+import '../../services/user_service.dart';
 
 class AlertItem {
   final String name;
@@ -32,10 +33,30 @@ class AlertsViewModel extends StateNotifier<AlertsState> {
             ],
             radiusMiles: 10,
           ),
-        );
+        ) {
+    _loadSavedRadius();
+  }
 
-  void updateRadius(double miles) {
+  Future<void> _loadSavedRadius() async {
+    try {
+      final double? savedRadius = await UserService.getAlertRadius();
+      if (savedRadius != null) {
+        state = state.copyWith(radiusMiles: savedRadius);
+      }
+    } catch (e) {
+      // If loading fails, keep the default value
+      debugPrint('Failed to load saved alert radius: $e');
+    }
+  }
+
+  Future<void> updateRadius(double miles) async {
     state = state.copyWith(radiusMiles: miles);
+    try {
+      await UserService.updateAlertRadius(miles);
+    } catch (e) {
+      debugPrint('Failed to save alert radius: $e');
+      // Optionally show a snackbar or handle the error
+    }
   }
 }
 

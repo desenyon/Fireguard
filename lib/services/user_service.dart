@@ -60,6 +60,7 @@ class UserService {
     required User user,
     Position? position,
     String? fcmToken,
+    double? alertRadius,
   }) async {
     try {
       final Map<String, dynamic> data = <String, dynamic>{
@@ -74,6 +75,9 @@ class UserService {
       }
       if (fcmToken != null) {
         data['fcmToken'] = fcmToken;
+      }
+      if (alertRadius != null) {
+        data['alertRadius'] = alertRadius;
       }
 
       await _firestore.collection('users').doc(user.uid).set(
@@ -93,6 +97,47 @@ class UserService {
     final Position? position = await getCurrentPositionSafely();
     final String? token = await requestNotificationPermissionAndToken();
     await upsertUserDocument(user: user, position: position, fcmToken: token);
+  }
+
+  static Future<void> updateAlertRadius(double radius) async {
+    try {
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        dev.log('[UserService] No authenticated user found for updating alert radius');
+        return;
+      }
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'alertRadius': radius,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      dev.log('[UserService] Updated alert radius to $radius for user ${user.uid}');
+    } catch (e) {
+      dev.log('[UserService] updateAlertRadius error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<double?> getAlertRadius() async {
+    try {
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        dev.log('[UserService] No authenticated user found for getting alert radius');
+        return null;
+      }
+
+      final DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>?;
+        final radius = data?['alertRadius'] as double?;
+        dev.log('[UserService] Retrieved alert radius: $radius for user ${user.uid}');
+        return radius;
+      }
+      return null;
+    } catch (e) {
+      dev.log('[UserService] getAlertRadius error: $e');
+      return null;
+    }
   }
 }
 

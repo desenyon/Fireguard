@@ -46,13 +46,13 @@ class FIRMSService {
     bool filterRealFiresOnly = true,
   }) {
     if (csvData.isEmpty) {
-      print('📭 No fire data available');
+      print('❌ No fire data available in the response.');
       return [];
     }
 
     final lines = csvData.split('\n');
     if (lines.length < 2) {
-      print('📭 No fire data found in response');
+      print('❌ No fire data available in the response.');
       return [];
     }
 

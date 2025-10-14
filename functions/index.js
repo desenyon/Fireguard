@@ -5,8 +5,7 @@ const { geohashQueryBounds, distanceBetween } = require('geofire-common');
 try { admin.app(); } catch (e) { admin.initializeApp(); }
 const db = admin.firestore();
 
-// Expects new report docs at `reports/{reportId}` with at least:
-// { latitude: number, longitude: number, reporterUid: string }
+
 exports.notifyUsersNearReport = functions.firestore
   .document('reports/{reportId}')
   .onCreate(async (snap, context) => {
@@ -44,9 +43,9 @@ exports.notifyUsersNearReport = functions.firestore
       const token = d.fcmToken;
       const uid = d.uid || doc.id;
       if (!token || Number.isNaN(uLat) || Number.isNaN(uLon)) continue;
-      if (reporterUid && uid === reporterUid) continue; // don't notify author
+      if (reporterUid && uid === reporterUid) continue; 
 
-      const distM = distanceBetween([uLat, uLon], center) * 1000; // km -> m
+      const distM = distanceBetween([uLat, uLon], center) * 1000; 
       if (distM <= radiusInM && !dedupUid.has(uid)) {
         dedupUid.add(uid);
         tokens.push(token);

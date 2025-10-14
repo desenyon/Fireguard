@@ -6,7 +6,7 @@ import 'firebase_options.dart';
 import 'shell/app_shell.dart';
 import 'providers/auth_provider.dart';
 import 'ui/auth/login_view.dart';
-import 'package:fireguard/services/firms_service.dart';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'services/user_service.dart';

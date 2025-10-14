@@ -9,6 +9,8 @@ import '../../services/evacuation_routing_service.dart';
 import '../../services/user_presence_service.dart';
 import '../../providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../menu/menu_view.dart';
+import 'dart:math';
 
 class MapView extends ConsumerStatefulWidget {
   const MapView({super.key});
@@ -278,10 +280,31 @@ class _MapViewState extends ConsumerState<MapView> {
             ),
           ),
           
-          // Top search pill with fire count
+          // Menu button
           Positioned(
             top: 16,
             left: 16,
+            child: SafeArea(
+              bottom: false,
+              child: FloatingActionButton(
+                mini: true,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MenuView(),
+                    ),
+                  );
+                },
+                backgroundColor: AppPalette.backgroundDarker.withOpacity(0.8),
+                child: const Icon(Icons.menu, color: AppPalette.white, size: 20),
+              ),
+            ),
+          ),
+          
+          // Top search pill with fire count
+          Positioned(
+            top: 16,
+            left: 80,
             right: 16,
             child: SafeArea(
               bottom: false,
@@ -331,33 +354,6 @@ class _MapViewState extends ConsumerState<MapView> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Filter toggle
-                  // Container(
-                  //   height: 36,
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.black.withOpacity(0.5),
-                  //     borderRadius: BorderRadius.circular(18),
-                  //   ),
-                  //   padding: const EdgeInsets.all(4),
-                  //   child: Row(
-                  //     mainAxisSize: MainAxisSize.min,
-                  //     children: [
-                  //       _buildFilterButton('Real Fires', !showAllAnomalies, () {
-                  //         setState(() {
-                  //           showAllAnomalies = false;
-                  //         });
-                  //         _loadFireData();
-                  //       }),
-                  //       const SizedBox(width: 4),
-                  //       _buildFilterButton('All', showAllAnomalies, () {
-                  //         setState(() {
-                  //           showAllAnomalies = true;
-                  //         });
-                  //         _loadFireData();
-                  //       }),
-                  //     ],
-                  //   ),
-                  // ),
                 ],
               ),
             ),
@@ -421,62 +417,11 @@ class _MapViewState extends ConsumerState<MapView> {
               ),
             ),
           
-          // Legend
-          // Positioned(
-          //   bottom: 80,
-          //   right: 16,
-          //   child: Container(
-          //     padding: const EdgeInsets.all(12),
-          //     decoration: BoxDecoration(
-          //       color: Colors.black.withOpacity(0.7),
-          //       borderRadius: BorderRadius.circular(12),
-          //     ),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       mainAxisSize: MainAxisSize.min,
-          //       children: [
-          //         const Text(
-          //           'Fire Intensity',
-          //           style: TextStyle(
-          //             color: Colors.white,
-          //             fontWeight: FontWeight.bold,
-          //             fontSize: 12,
-          //           ),
-          //         ),
-          //         const SizedBox(height: 8),
-          //         _buildLegendItem(Colors.red, 'Extreme (>50 MW)'),
-          //         _buildLegendItem(Colors.orange, 'High (20-50 MW)'),
-          //         _buildLegendItem(Colors.yellow, 'Medium (10-20 MW)'),
-          //         _buildLegendItem(Colors.green, 'Low (<10 MW)'),
-          //       ],
-          //     ),
-          //   ),
-          // ),
+     
+      
+      
           
-          // Bottom center action
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              top: false,
-              child: Center(
-                child: Container(
-                  height: 44,
-                  width: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.add, color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          
-          // Loading indicator
+        
           if (isLoading || isLocationLoading)
             Positioned.fill(
               child: Container(
@@ -506,50 +451,9 @@ class _MapViewState extends ConsumerState<MapView> {
     );
   }
 
-  Widget _buildFilterButton(String label, bool isActive, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive ? AppPalette.orange : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
+  
 
-  Widget _buildLegendItem(Color color, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 10),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   double _getMarkerSize(double frp) {
     if (frp > 50.0) return 32.0;
@@ -566,6 +470,23 @@ class _MapViewState extends ConsumerState<MapView> {
   }
 
   void _showFireDetails(FireHotspot hotspot) {
+    // Calculate distance from user location
+    double? distanceFromUser;
+    if (userLocation != null) {
+      distanceFromUser = _calculateDistance(
+        userLocation!.latitude,
+        userLocation!.longitude,
+        hotspot.latitude,
+        hotspot.longitude,
+      );
+    }
+
+    // Calculate evacuation direction
+    String evacuationDirection = _calculateEvacuationDirection(hotspot);
+
+    // Calculate risk assessment
+    String riskLevel = _calculateRiskAssessment(hotspot, distanceFromUser);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -590,20 +511,30 @@ class _MapViewState extends ConsumerState<MapView> {
             ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('📍 Location', 
-                '${hotspot.latitude.toStringAsFixed(4)}, ${hotspot.longitude.toStringAsFixed(4)}'),
-            _buildDetailRow('🔥 Fire Radiative Power', '${hotspot.frp.toStringAsFixed(2)} MW'),
-            _buildDetailRow('🌡️ Brightness Temp', '${hotspot.brightness.toStringAsFixed(1)} K'),
-            _buildDetailRow('✅ Confidence', hotspot.confidence.toUpperCase()),
-            _buildDetailRow('📅 Date', hotspot.acqDate),
-            _buildDetailRow('🕐 Time', hotspot.acqTime),
-            _buildDetailRow('🛰️ Satellite', hotspot.satellite),
-            _buildDetailRow('🌙 Day/Night', hotspot.dayNight),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('📍 Location', 
+                  '${hotspot.latitude.toStringAsFixed(4)}, ${hotspot.longitude.toStringAsFixed(4)}'),
+              _buildDetailRow('🔥 Fire Radiative Power', '${hotspot.frp.toStringAsFixed(2)} MW'),
+              _buildDetailRow('🌡️ Brightness Temp', '${hotspot.brightness.toStringAsFixed(1)} K'),
+              _buildDetailRow('✅ Confidence', hotspot.confidence.toUpperCase()),
+              _buildDetailRow('📅 Date', hotspot.acqDate),
+              _buildDetailRow('🕐 Acquisition Time', hotspot.acqTime),
+              _buildDetailRow('🛰️ Satellite', hotspot.satellite),
+              _buildDetailRow('🌙 Day/Night', hotspot.dayNight),
+              
+              // Enhanced information
+              if (distanceFromUser != null) ...[
+                const Divider(height: 20),
+                _buildDetailRow('📏 Distance from You', '${distanceFromUser.toStringAsFixed(1)} km'),
+              ],
+              _buildDetailRow('🚨 Risk Assessment', riskLevel),
+              _buildDetailRow('🏃 Evacuation Direction', evacuationDirection),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -641,6 +572,83 @@ class _MapViewState extends ConsumerState<MapView> {
         ],
       ),
     );
+  }
+
+  // Calculate distance between two points using Haversine formula
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371; // Earth's radius in kilometers
+    
+    double dLat = _degreesToRadians(lat2 - lat1);
+    double dLon = _degreesToRadians(lon2 - lon1);
+    
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) * cos(_degreesToRadians(lat2)) * sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * asin(sqrt(a));
+    
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * (3.14159265359 / 180);
+  }
+
+  // Calculate evacuation direction from fire hotspot
+  String _calculateEvacuationDirection(FireHotspot hotspot) {
+    if (userLocation == null) return 'Unknown (no location)';
+    
+    double deltaLat = userLocation!.latitude - hotspot.latitude;
+    double deltaLon = userLocation!.longitude - hotspot.longitude;
+    
+    // Calculate bearing angle
+    double bearing = (atan2(deltaLon, deltaLat) * 180 / 3.14159265359 + 360) % 360;
+    
+    // Convert to compass direction
+    if (bearing >= 337.5 || bearing < 22.5) return 'North';
+    if (bearing >= 22.5 && bearing < 67.5) return 'Northeast';
+    if (bearing >= 67.5 && bearing < 112.5) return 'East';
+    if (bearing >= 112.5 && bearing < 157.5) return 'Southeast';
+    if (bearing >= 157.5 && bearing < 202.5) return 'South';
+    if (bearing >= 202.5 && bearing < 247.5) return 'Southwest';
+    if (bearing >= 247.5 && bearing < 292.5) return 'West';
+    if (bearing >= 292.5 && bearing < 337.5) return 'Northwest';
+    
+    return 'Unknown';
+  }
+
+  // Calculate risk assessment based on confidence, intensity, and distance
+  String _calculateRiskAssessment(FireHotspot hotspot, double? distanceFromUser) {
+    int riskScore = 0;
+    
+    // Confidence scoring
+    switch (hotspot.confidence.toLowerCase()) {
+      case 'high':
+        riskScore += 3;
+        break;
+      case 'nominal':
+        riskScore += 2;
+        break;
+      case 'low':
+        riskScore += 1;
+        break;
+    }
+    
+    // Intensity scoring (based on FRP)
+    if (hotspot.frp > 50.0) riskScore += 3;
+    else if (hotspot.frp > 20.0) riskScore += 2;
+    else if (hotspot.frp > 10.0) riskScore += 1;
+    
+    // Distance scoring (closer = higher risk)
+    if (distanceFromUser != null) {
+      if (distanceFromUser < 5.0) riskScore += 3;
+      else if (distanceFromUser < 15.0) riskScore += 2;
+      else if (distanceFromUser < 30.0) riskScore += 1;
+    }
+    
+    // Determine risk level
+    if (riskScore >= 7) return '🔴 Critical';
+    if (riskScore >= 5) return '🟠 High';
+    if (riskScore >= 3) return '🟡 Moderate';
+    return '🟢 Low';
   }
 
   Future<void> _computeAndDrawEvacuation() async {
