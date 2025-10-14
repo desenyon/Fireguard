@@ -77,12 +77,7 @@ class CompassView extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smoke Compass'),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 8.0),
-            child: Icon(Icons.settings, color: AppPalette.white),
-          ),
-        ],
+       
         backgroundColor: AppPalette.backgroundDarker,
       ),
       backgroundColor: AppPalette.screenBackground,

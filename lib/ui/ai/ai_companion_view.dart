@@ -173,6 +173,7 @@ class _AiCompanionViewState extends ConsumerState<AiCompanionView> {
                   FloatingActionButton(
                     mini: true,
                     backgroundColor: AppPalette.orange,
+                    heroTag: null,
                     onPressed: () => _onSubmit(_controller.text),
                     child: const Icon(Icons.arrow_upward, color: AppPalette.white),
                   ),

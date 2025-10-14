@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/auth_service.dart';
+
 
 class MenuView extends ConsumerStatefulWidget {
   const MenuView({super.key});
@@ -66,7 +66,7 @@ class _MenuViewState extends ConsumerState<MenuView> {
                     const SizedBox(height: 32),
                     
                     // Leaderboard Section
-                    _buildLeaderboard(),
+                    // _buildLeaderboard(),
                     
                     const SizedBox(height: 32),
                     
@@ -103,7 +103,7 @@ class _MenuViewState extends ConsumerState<MenuView> {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
+         height: 250,
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -249,69 +249,7 @@ class _MenuViewState extends ConsumerState<MenuView> {
     );
   }
 
-  Widget _buildLeaderboard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Leaderboard',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppPalette.white,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: AppPalette.cardBackground,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppPalette.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppPalette.red,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.emoji_events,
-                  color: AppPalette.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your Rank',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppPalette.white,
-                    ),
-                  ),
-                  Text(
-                    '12,345 points',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppPalette.lightGray,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildSettings() {
     return Column(

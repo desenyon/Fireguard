@@ -288,6 +288,7 @@ class _MapViewState extends ConsumerState<MapView> {
               bottom: false,
               child: FloatingActionButton(
                 mini: true,
+                heroTag: null,
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -367,6 +368,7 @@ class _MapViewState extends ConsumerState<MapView> {
               bottom: false,
               child: FloatingActionButton(
                 mini: true,
+                heroTag: null,
                 onPressed: _loadFireData,
                 backgroundColor: AppPalette.orange,
                 child: const Icon(Icons.refresh, color: Colors.white, size: 20),
@@ -383,6 +385,7 @@ class _MapViewState extends ConsumerState<MapView> {
                 bottom: false,
                 child: FloatingActionButton(
                   mini: true,
+                heroTag: null,
                   onPressed: () {
                     mapController.move(userLocation!, 12.0);
                   },
@@ -401,6 +404,7 @@ class _MapViewState extends ConsumerState<MapView> {
                 bottom: false,
                 child: FloatingActionButton(
                   mini: false,
+                heroTag: null,
                   onPressed: _isRouting ? null : _computeAndDrawEvacuation,
                   backgroundColor: Colors.green,
                   child: _isRouting
