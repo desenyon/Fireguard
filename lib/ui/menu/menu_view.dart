@@ -13,7 +13,6 @@ class MenuView extends ConsumerStatefulWidget {
 
 class _MenuViewState extends ConsumerState<MenuView> {
   bool _isDarkMode = true;
-  String _units = 'Imperial';
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +64,7 @@ class _MenuViewState extends ConsumerState<MenuView> {
                     
                     const SizedBox(height: 32),
                     
-                    // Leaderboard Section
-                    // _buildLeaderboard(),
+                  
                     
                     const SizedBox(height: 32),
                     
@@ -103,7 +101,7 @@ class _MenuViewState extends ConsumerState<MenuView> {
         ),
         const SizedBox(height: 16),
         SizedBox(
-         height: 250,
+         height: 270,
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -272,43 +270,19 @@ class _MenuViewState extends ConsumerState<MenuView> {
           ),
           child: Column(
             children: [
-              _buildSettingItem(
-                title: 'Dark Mode',
-                trailing: Switch(
-                  value: _isDarkMode,
-                  onChanged: (value) {
-                    setState(() {
-                      _isDarkMode = value;
-                    });
-                  },
-                  activeColor: AppPalette.orange,
-                ),
-              ),
-              _buildDivider(),
-              _buildSettingItem(
-                title: 'Units',
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _units,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppPalette.lightGray,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: AppPalette.lightGray,
-                    ),
-                  ],
-                ),
-                onTap: () {
-                  _showUnitsDialog();
-                },
-              ),
+              // _buildSettingItem(
+              //   title: 'Dark Mode',
+              //   trailing: Switch(
+              //     value: _isDarkMode,
+              //     onChanged: (value) {
+              //       setState(() {
+              //         _isDarkMode = value;
+              //       });
+              //     },
+              //     activeColor: AppPalette.orange,
+              //   ),
+              // ),
+              // _buildDivider(),
             ],
           ),
         ),
@@ -392,45 +366,4 @@ class _MenuViewState extends ConsumerState<MenuView> {
     );
   }
 
-  void _showUnitsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppPalette.cardBackground,
-        title: const Text(
-          'Select Units',
-          style: TextStyle(color: AppPalette.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text(
-                'Imperial',
-                style: TextStyle(color: AppPalette.white),
-              ),
-              onTap: () {
-                setState(() {
-                  _units = 'Imperial';
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Metric',
-                style: TextStyle(color: AppPalette.white),
-              ),
-              onTap: () {
-                setState(() {
-                  _units = 'Metric';
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

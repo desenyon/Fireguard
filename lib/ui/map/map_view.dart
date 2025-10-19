@@ -110,10 +110,9 @@ class _MapViewState extends ConsumerState<MapView> {
           );
         }
       } catch (e) {
-        // ignore errors
+     
       }
 
-      // Proximity alerts will be handled by backend push notifications.
     } catch (e) {
       print('Error getting location: $e');
       if (!mounted) return;
@@ -126,7 +125,7 @@ class _MapViewState extends ConsumerState<MapView> {
   Future<void> _loadFireData() async {
     if (!mounted) return;
 
-    final int requestId = ++_activeRequestId; // mark this invocation
+    final int requestId = ++_activeRequestId; 
     _safeSetState(() {
       isLoading = true;
     });
@@ -136,7 +135,6 @@ class _MapViewState extends ConsumerState<MapView> {
           ? await FIRMSService.fetchAllThermalAnomalies()
           : await FIRMSService.fetchLatestGlobalFireData();
 
-      // If another, newer request started meanwhile or widget disposed, ignore
       if (!mounted || _disposed || requestId != _activeRequestId) return;
 
     _safeSetState(() {
@@ -157,12 +155,10 @@ class _MapViewState extends ConsumerState<MapView> {
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted || _disposed) return;
-    // Use super.setState to avoid recursive guard if we override setState
+  
     super.setState(fn);
   }
 
-  // Extra defensive override: if any external code holds a reference to this State
-  // and calls setState after dispose, we silently ignore and log once.
   bool _postDisposeSetStateWarned = false;
   @override
   void setState(VoidCallback fn) {
@@ -175,7 +171,7 @@ class _MapViewState extends ConsumerState<MapView> {
         // ignore: avoid_print
         print('[MapView] Ignored setState after dispose. First occurrence. Stack snippet:\n$interesting');
       }
-      return; // ignore silently after first log
+      return; 
     }
     super.setState(fn);
   }
@@ -303,62 +299,62 @@ class _MapViewState extends ConsumerState<MapView> {
           ),
           
           // Top search pill with fire count
-          Positioned(
-            top: 16,
-            left: 80,
-            right: 16,
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  Container(
-                    height: 40,
-                    width: double.infinity,
-                    constraints: const BoxConstraints(maxWidth: 320),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Colors.white70, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            showAllAnomalies ? 'All Thermal Anomalies' : 'Real Fires Only',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (fireHotspots.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppPalette.orange,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${fireHotspots.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 16,
+          //   left: 80,
+          //   right: 16,
+          //   child: SafeArea(
+          //     bottom: false,
+          //     child: Column(
+          //       children: [
+          //         Container(
+          //           height: 40,
+          //           width: double.infinity,
+          //           constraints: const BoxConstraints(maxWidth: 320),
+          //           decoration: BoxDecoration(
+          //             color: Colors.white.withOpacity(0.25),
+          //             borderRadius: BorderRadius.circular(20),
+          //           ),
+          //           padding: const EdgeInsets.symmetric(horizontal: 16),
+          //           child: Row(
+          //             children: [
+          //               const Icon(Icons.search, color: Colors.white70, size: 20),
+          //               const SizedBox(width: 8),
+          //               Expanded(
+          //                 child: Text(
+          //                   showAllAnomalies ? 'All Thermal Anomalies' : 'Real Fires Only',
+          //                   style: const TextStyle(
+          //                     color: Colors.white,
+          //                     fontSize: 14,
+          //                     fontWeight: FontWeight.w600,
+          //                   ),
+          //                   overflow: TextOverflow.ellipsis,
+          //                 ),
+          //               ),
+          //               // if (fireHotspots.isNotEmpty)
+          //                 // Container(
+          //                 //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //                 //   decoration: BoxDecoration(
+          //                 //     color: AppPalette.orange,
+          //                 //     borderRadius: BorderRadius.circular(12),
+          //                 //   ),
+          //                 //   child: Text(
+          //                 //     '${fireHotspots.length}',
+          //                 //     style: const TextStyle(
+          //                 //       color: Colors.white,
+          //                 //       fontSize: 12,
+          //                 //       fontWeight: FontWeight.bold,
+          //                 //     ),
+          //                 //   ),
+          //                 // ),
+          //             ],
+          //           ),
+          //         ),
+          //         const SizedBox(height: 8),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           
           // Refresh button
           Positioned(
@@ -520,23 +516,21 @@ class _MapViewState extends ConsumerState<MapView> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('📍 Location', 
+              _buildDetailRow('🔥 Fire Name', hotspot.fireName),
+              _buildDetailRow('📍 Coordinates', 
                   '${hotspot.latitude.toStringAsFixed(4)}, ${hotspot.longitude.toStringAsFixed(4)}'),
-              _buildDetailRow('🔥 Fire Radiative Power', '${hotspot.frp.toStringAsFixed(2)} MW'),
-              _buildDetailRow('🌡️ Brightness Temp', '${hotspot.brightness.toStringAsFixed(1)} K'),
-              _buildDetailRow('✅ Confidence', hotspot.confidence.toUpperCase()),
-              _buildDetailRow('📅 Date', hotspot.acqDate),
-              _buildDetailRow('🕐 Acquisition Time', hotspot.acqTime),
-              _buildDetailRow('🛰️ Satellite', hotspot.satellite),
-              _buildDetailRow('🌙 Day/Night', hotspot.dayNight),
+              _buildDetailRow('🔥 Fire Size', _getFireSizeDescription(hotspot.frp)),
+              _buildDetailRow('✅ How Reliable', _getConfidenceDescription(hotspot.confidence)),
+              _buildDetailRow('📅 Detected On', _formatDate(hotspot.acqDate)),
+              _buildDetailRow('🕐 Time', _formatTime(hotspot.acqTime)),
               
               // Enhanced information
               if (distanceFromUser != null) ...[
                 const Divider(height: 20),
                 _buildDetailRow('📏 Distance from You', '${distanceFromUser.toStringAsFixed(1)} km'),
               ],
-              _buildDetailRow('🚨 Risk Assessment', riskLevel),
-              _buildDetailRow('🏃 Evacuation Direction', evacuationDirection),
+              _buildDetailRow('🚨 Safety Level', _getUserFriendlyRiskLevel(riskLevel)),
+              _buildDetailRow('🏃 Safe Direction', 'Head $evacuationDirection'),
             ],
           ),
         ),
@@ -692,6 +686,75 @@ class _MapViewState extends ConsumerState<MapView> {
           _isRouting = false;
         });
       }
+    }
+  }
+
+  // Helper methods to convert technical data to user-friendly descriptions
+  String _getFireSizeDescription(double frp) {
+    if (frp > 50.0) return 'Very Large Fire (High Danger)';
+    if (frp > 20.0) return 'Large Fire (Moderate Danger)';
+    if (frp > 10.0) return 'Medium Fire (Low Danger)';
+    return 'Small Fire (Minimal Danger)';
+  }
+
+  String _getConfidenceDescription(String confidence) {
+    switch (confidence.toLowerCase()) {
+      case 'high':
+        return 'Very Reliable (99% sure it\'s a fire)';
+      case 'nominal':
+        return 'Reliable (95% sure it\'s a fire)';
+      case 'low':
+        return 'Uncertain (80% sure it\'s a fire)';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      // Assuming date format is YYYY-MM-DD
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final year = parts[0];
+        final month = parts[1];
+        final day = parts[2];
+        return '$day/$month/$year';
+      }
+      return dateStr;
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _formatTime(String timeStr) {
+    try {
+      // Assuming time format is HHMM (24-hour)
+      if (timeStr.length == 4) {
+        final hours = timeStr.substring(0, 2);
+        final minutes = timeStr.substring(2, 4);
+        final hourInt = int.parse(hours);
+        final period = hourInt >= 12 ? 'PM' : 'AM';
+        final displayHour = hourInt > 12 ? hourInt - 12 : (hourInt == 0 ? 12 : hourInt);
+        return '$displayHour:${minutes} $period';
+      }
+      return timeStr;
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
+  String _getUserFriendlyRiskLevel(String riskLevel) {
+    switch (riskLevel) {
+      case '🔴 Critical':
+        return '🔴 EXTREME DANGER - Evacuate immediately!';
+      case '🟠 High':
+        return '🟠 HIGH DANGER - Prepare to evacuate';
+      case '🟡 Moderate':
+        return '🟡 MODERATE DANGER - Stay alert';
+      case '🟢 Low':
+        return '🟢 LOW DANGER - Monitor situation';
+      default:
+        return riskLevel;
     }
   }
 }

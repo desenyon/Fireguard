@@ -36,7 +36,7 @@ class FIRMSService {
         return [];
       }
     } catch (e) {
-      print('❌ Exception occurred: $e');
+    
       return [];
     }
   }
@@ -46,7 +46,7 @@ class FIRMSService {
     bool filterRealFiresOnly = true,
   }) {
     if (csvData.isEmpty) {
-      print('❌ No fire data available in the response.');
+     
       return [];
     }
 
@@ -56,10 +56,7 @@ class FIRMSService {
       return [];
     }
 
-    print('\n🔥 FIRE DETECTION DATA 🔥');
-    print('=' * 60);
-    print('Header: ${lines[0]}');
-    print('=' * 60);
+   
 
     final allHotspots = <FireHotspot>[];
     final filteredHotspots = <FireHotspot>[];
@@ -81,13 +78,14 @@ class FIRMSService {
               realFireCount++;
               filteredHotspots.add(hotspot);
               
-              print('🔥 Fire #$realFireCount: '
-                  'Lat: ${hotspot.latitude.toStringAsFixed(4)}, '
-                  'Lon: ${hotspot.longitude.toStringAsFixed(4)} | '
-                  'Confidence: ${hotspot.confidence}, '
-                  'FRP: ${hotspot.frp.toStringAsFixed(2)} MW, '
-                  'Intensity: ${hotspot.intensityLevel}');
-            }
+            //   print('🔥 Fire #$realFireCount: '
+            //       'Lat: ${hotspot.latitude.toStringAsFixed(4)}, '
+            //       'Lon: ${hotspot.longitude.toStringAsFixed(4)} | '
+            //       'Confidence: ${hotspot.confidence}, '
+            //       'FRP: ${hotspot.frp.toStringAsFixed(2)} MW, '
+            //       'Intensity: ${hotspot.intensityLevel}');
+            //
+             }
           } catch (e) {
             print('❌ Error parsing line $i: $e');
           }
@@ -95,11 +93,6 @@ class FIRMSService {
       }
     }
 
-    print('=' * 60);
-    print('📊 Total thermal anomalies detected: $totalCount');
-    print('🔥 Real fires (filtered): $realFireCount');
-    print('📉 Filtered out: ${totalCount - realFireCount} (low confidence/small burns)');
-    print('=' * 60);
 
     return filterRealFiresOnly ? filteredHotspots : allHotspots;
   }

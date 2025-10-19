@@ -13,10 +13,10 @@ class ReportService {
   }) async {
     log('Creating report at ($latitude, $longitude) by $reportedByEmail');
     await _db.collection('reports').add({
-      'lat': latitude,
-      'lng': longitude,
+      'latitude': latitude,  // Changed from 'lat' to match Firebase function
+      'longitude': longitude,  // Changed from 'lng' to match Firebase function
       'reportedByEmail': reportedByEmail,
-      'description': description,
+      'description': description ?? 'Fire reported by community member',
       'radiusMeters': radiusMeters,
       'createdAt': FieldValue.serverTimestamp(),
     });

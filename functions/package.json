@@ -2,7 +2,7 @@
   "name": "functions",
   "private": true,
   "description": "Cloud Functions for Firebase",
-  "engines": { "node": "18" },
+  "engines": { "node": "22" },
   "scripts": {
     "lint": "eslint . || true",
     "serve": "firebase emulators:start --only functions",

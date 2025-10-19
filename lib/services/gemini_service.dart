@@ -5,7 +5,7 @@ import 'dart:developer' as dev;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  static final String _apiKey = dotenv.env['GEN_API_KEY'] ?? '';
+  static final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
   static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   
   static const String _systemPrompt = '''
@@ -26,11 +26,11 @@ Keep responses concise, helpful, and focused on practical fire safety advice.
 
   static Future<String> generateResponse(String userMessage) async {
     try {
-      // Check if the message is fire safety related
+    
       if (!isFireSafetyRelated(userMessage)) {
         return "I'm specialized in fire safety and emergency preparedness. I can help you with questions about wildfires, evacuation planning, breathing through smoke, emergency supplies, and other fire safety topics. What fire safety question can I help you with?";
       }
-      dev.log(dotenv.env['GEMINI_API_KEY'] ?? 'No API key found');
+      
 
       // Prepare the request body
       final requestBody = {
@@ -50,6 +50,7 @@ Keep responses concise, helpful, and focused on practical fire safety advice.
           'maxOutputTokens': 1024,
         }
       };
+      dev.log("here is the api key: $_apiKey ?? 'No API key found'}");
 
       // Make the HTTP request
       final response = await http.post(
@@ -61,6 +62,7 @@ Keep responses concise, helpful, and focused on practical fire safety advice.
         body: jsonEncode(requestBody),
       );
       dev.log(response.body);
+      dev.log("here is the api key: ${_apiKey} ?? 'No API key found'}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);

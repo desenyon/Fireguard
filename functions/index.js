@@ -1,8 +1,8 @@
-const functions = require('firebase-functions');
+const functions = require("firebase-functions/v1");
 const admin = require('firebase-admin');
 const { geohashQueryBounds, distanceBetween } = require('geofire-common');
 
-try { admin.app(); } catch (e) { admin.initializeApp(); }
+admin.initializeApp();
 const db = admin.firestore();
 
 
@@ -15,6 +15,7 @@ exports.notifyUsersNearReport = functions.firestore
     const lat = Number(data.latitude);
     const lon = Number(data.longitude);
     const reporterUid = data.reporterUid || null;
+    const reportDescription = data.description || 'Fire reported by community member';
     if (Number.isNaN(lat) || Number.isNaN(lon)) return null;
 
     const center = [lat, lon];
@@ -54,54 +55,37 @@ exports.notifyUsersNearReport = functions.firestore
 
     if (tokens.length === 0) return null;
 
+  
+    const distanceKm = Math.round(distanceBetween(center, center) * 1000 / 1000); 
+    
     const message = {
       tokens,
       notification: {
-        title: 'Nearby fire reported',
-        body: 'A community report was filed within 5 km of your location.',
+        title: '🔥 Fire Alert - Community Report',
+        body: `Fire reported ${Math.round(radiusInM/1000)}km from you: ${reportDescription}`,
       },
       data: {
+        type: 'fire_report',
         reportId: context.params.reportId,
         latitude: String(lat),
         longitude: String(lon),
-        radiusKm: '5',
+        radiusKm: String(Math.round(radiusInM/1000)),
+        description: reportDescription,
+        timestamp: new Date().toISOString(),
       },
-      android: { priority: 'high' },
+      android: { 
+        priority: 'high',
+        notification: {
+          channelId: 'fire_alerts',
+          icon: 'ic_fire_alert',
+          color: '#FF6B00',
+        }
+      },
     };
 
+    console.log(`Sending fire alert notification to ${tokens.length} users near fire report at ${lat}, ${lon}`);
     await admin.messaging().sendMulticast(message);
     return null;
   });
 
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
 
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
-const logger = require("firebase-functions/logger");
-
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
