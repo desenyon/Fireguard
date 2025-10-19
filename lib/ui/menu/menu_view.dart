@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants/palette.dart';
 import '../../providers/auth_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class MenuView extends ConsumerStatefulWidget {
@@ -13,6 +14,14 @@ class MenuView extends ConsumerStatefulWidget {
 
 class _MenuViewState extends ConsumerState<MenuView> {
   bool _isDarkMode = true;
+
+
+Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,22 +114,37 @@ class _MenuViewState extends ConsumerState<MenuView> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _buildGuideCard(
-                title: 'Ready',
-                description: 'Prepare your home and family for potential wildfire.',
-                illustration: _buildReadyIllustration(),
+              GestureDetector(
+                onTap: () async {
+                  _launchURL('https://www.fire.ca.gov/prepare/get-ready');
+                },
+                child: _buildGuideCard(
+                  title: 'Ready',
+                  description: 'Prepare your home and family for potential wildfire.',
+                  illustration: _buildReadyIllustration(),
+                ),
               ),
               const SizedBox(width: 16),
-              _buildGuideCard(
-                title: 'Set',
-                description: 'Be aware of conditions and prepare to leave.',
-                illustration: _buildSetIllustration(),
+              GestureDetector(
+                onTap: () async {
+                  _launchURL('https://www.fire.ca.gov/prepare/get-set');
+                },
+                child: _buildGuideCard(
+                  title: 'Set',
+                  description: 'Be aware of conditions and prepare to leave.',
+                  illustration: _buildSetIllustration(),
+                ),
               ),
               const SizedBox(width: 16),
-              _buildGuideCard(
-                title: 'Go',
-                description: 'Evacuate if advised or unsafe.',
-                illustration: _buildGoIllustration(),
+              GestureDetector(
+                onTap: () async {
+                  _launchURL('https://www.fire.ca.gov/prepare/get-ready-to-go');
+                },
+                child: _buildGuideCard(
+                  title: 'Go',
+                  description: 'Evacuate if advised or unsafe.',
+                  illustration: _buildGoIllustration(),
+                ),
               ),
             ],
           ),
