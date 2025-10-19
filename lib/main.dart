@@ -80,7 +80,7 @@ class MyApp extends ConsumerWidget {
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppPalette.navBarBackground,
-          selectedItemColor: AppPalette.white,
+          selectedItemColor: AppPalette.orange,
 
           unselectedItemColor: AppPalette.lightGray,
           showUnselectedLabels: true,
