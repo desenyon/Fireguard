@@ -265,6 +265,7 @@ class CompassView extends ConsumerWidget {
                 riskLabel: s.riskLabel,
                 smokeFreeDirection: s.smokeFreeDirection,
                 weatherData: s.weatherData,
+                
               ),
             ),
           ),
@@ -423,23 +424,23 @@ class _CompassGauge extends StatelessWidget {
           // Air quality directional labels
           if (weatherData != null) ...[
             // Good air quality label
-            Positioned(
-              child: _AirQualityLabel(
-                direction: (weatherData!.windDirection + 180) % 360,
-                label: 'Good Air',
-                color: AppPalette.green,
-                size: size,
-              ),
-            ),
-            // Bad air quality label
-            Positioned(
-              child: _AirQualityLabel(
-                direction: weatherData!.windDirection,
-                label: 'Bad Air',
-                color: AppPalette.red,
-                size: size,
-              ),
-            ),
+            // Positioned(
+            //   child: _AirQualityLabel(
+            //     direction: (weatherData!.windDirection + 180) % 360,
+            //     label: 'Good Air',
+            //     color: AppPalette.green,
+            //     size: size,
+            //   ),
+            // ),
+            // // Bad air quality label
+            // Positioned(
+            //   child: _AirQualityLabel(
+            //     direction: weatherData!.windDirection,
+            //     label: 'Bad Air',
+            //     color: AppPalette.red,
+            //     size: size,
+            //   ),
+            // ),
           ],
         ],
       ),
@@ -486,7 +487,7 @@ class _GaugePainter extends CustomPainter {
 
     final Paint ringPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 26
+      ..strokeWidth = 60
       ..strokeCap = StrokeCap.round;
 
     // Dynamic air quality arcs based on wind direction and air quality

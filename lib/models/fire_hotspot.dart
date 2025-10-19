@@ -40,12 +40,45 @@ class FireHotspot {
       acqDate: fields[5],
       acqTime: fields[6],
       satellite: fields[7],
-      confidence: fields[8].toLowerCase(), // low, nominal, high
+      confidence: _normalizeConfidence(fields[8]), // map short/varied codes
       version: fields[9],
       brightT31: double.tryParse(fields[10]) ?? 0.0,
       frp: double.tryParse(fields[11]) ?? 0.0,
       dayNight: fields[12],
     );
+  }
+
+  // Parse LANDSAT_NRT CSV (different schema, fewer columns)
+  factory FireHotspot.fromLandsatCsv(List<String> fields) {
+    // Expected order:
+    // 0:lat, 1:lon, 2:path, 3:row, 4:scan, 5:track, 6:acq_date, 7:acq_time,
+    // 8:satellite, 9:confidence (L/N/H), 10:daynight
+    return FireHotspot(
+      latitude: double.parse(fields[0]),
+      longitude: double.parse(fields[1]),
+      brightness: 0.0, // not provided in LANDSAT csv
+      scan: double.tryParse(fields[4]) ?? 0.0,
+      track: double.tryParse(fields[5]) ?? 0.0,
+      acqDate: fields[6],
+      acqTime: fields[7],
+      satellite: fields[8],
+      confidence: _normalizeConfidence(fields[9]),
+      version: 'LANDSAT_NRT',
+      brightT31: 0.0,
+      frp: 0.0,
+      dayNight: fields[10],
+    );
+  }
+
+  static String _normalizeConfidence(String raw) {
+    final v = raw.trim().toLowerCase();
+    // Map short codes to words
+    if (v == 'h') return 'high';
+    if (v == 'n') return 'nominal';
+    if (v == 'l') return 'low';
+    // Already in word form or numeric
+    if (v == 'high' || v == 'nominal' || v == 'low') return v;
+    return v;
   }
 
   // Check if this is likely a real fire
@@ -191,5 +224,42 @@ class FireHotspot {
   @override
   String toString() {
     return 'FireHotspot(lat: $latitude, lon: $longitude, confidence: $confidence, FRP: ${frp.toStringAsFixed(2)} MW, intensity: $intensityLevel)';
+  }
+
+  // JSON serialization for caching
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'brightness': brightness,
+      'scan': scan,
+      'track': track,
+      'acqDate': acqDate,
+      'acqTime': acqTime,
+      'satellite': satellite,
+      'confidence': confidence,
+      'version': version,
+      'brightT31': brightT31,
+      'frp': frp,
+      'dayNight': dayNight,
+    };
+  }
+
+  factory FireHotspot.fromJson(Map<String, dynamic> json) {
+    return FireHotspot(
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      brightness: (json['brightness'] as num?)?.toDouble() ?? 0.0,
+      scan: (json['scan'] as num?)?.toDouble() ?? 0.0,
+      track: (json['track'] as num?)?.toDouble() ?? 0.0,
+      acqDate: json['acqDate'] as String,
+      acqTime: json['acqTime'] as String,
+      satellite: json['satellite'] as String,
+      confidence: json['confidence'] as String,
+      version: json['version'] as String,
+      brightT31: (json['brightT31'] as num?)?.toDouble() ?? 0.0,
+      frp: (json['frp'] as num?)?.toDouble() ?? 0.0,
+      dayNight: json['dayNight'] as String,
+    );
   }
 }
