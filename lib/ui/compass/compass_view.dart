@@ -8,10 +8,10 @@ import '../../utils/constants/palette.dart';
 import '../../services/weather_service.dart';
 
 class CompassState {
-  final double headingDegrees; // 0..360, 0 = North
-  final String windFromLabel; // e.g., "Northwest"
-  final String riskLabel; // e.g., "Highest Risk"
-  final String guidance; // e.g., "Head Southeast for cleaner air."
+  final double headingDegrees; 
+  final String windFromLabel; 
+  final String riskLabel; 
+  final String guidance; 
   final WeatherData? weatherData;
   final bool isLoadingWeather;
   final String? errorMessage;
@@ -265,7 +265,6 @@ class CompassView extends ConsumerWidget {
                 riskLabel: s.riskLabel,
                 smokeFreeDirection: s.smokeFreeDirection,
                 weatherData: s.weatherData,
-                
               ),
             ),
           ),
@@ -293,7 +292,7 @@ class CompassView extends ConsumerWidget {
                         _WeatherInfoItem(
                           icon: Icons.thermostat,
                           label: 'Temp',
-                          value: '${s.weatherData!.temperature.toStringAsFixed(1)}°C',
+                          value: '${(s.weatherData!.temperature * 9/5 + 32).toStringAsFixed(1)}°F',
                         ),
                         _WeatherInfoItem(
                           icon: Icons.water_drop,

@@ -33,26 +33,26 @@ class AlertItem {
 
 class AlertsState {
   final List<AlertItem> alerts;
-  final double radiusKilometers;
+  final double radiusMiles;
   final bool isLoading;
   final String? errorMessage;
 
   const AlertsState({
     required this.alerts, 
-    required this.radiusKilometers,
+    required this.radiusMiles,
     this.isLoading = false,
     this.errorMessage,
   });
 
   AlertsState copyWith({
     List<AlertItem>? alerts, 
-    double? radiusKilometers,
+    double? radiusMiles,
     bool? isLoading,
     String? errorMessage,
   }) =>
       AlertsState(
         alerts: alerts ?? this.alerts, 
-        radiusKilometers: radiusKilometers ?? this.radiusKilometers,
+        radiusMiles: radiusMiles ?? this.radiusMiles,
         isLoading: isLoading ?? this.isLoading,
         errorMessage: errorMessage ?? this.errorMessage,
       );
@@ -63,7 +63,7 @@ class AlertsViewModel extends StateNotifier<AlertsState> {
       : super(
           const AlertsState(
             alerts: <AlertItem>[],
-            radiusKilometers: 16,
+            radiusMiles: 10, // Default 10 miles
             isLoading: false,
           ),
         ) {
@@ -73,9 +73,11 @@ class AlertsViewModel extends StateNotifier<AlertsState> {
 
   Future<void> _loadSavedRadius() async {
     try {
-      final double? savedRadius = await UserService.getAlertRadius();
-      if (savedRadius != null) {
-        state = state.copyWith(radiusKilometers: savedRadius);
+      final double? savedRadiusKm = await UserService.getAlertRadius();
+      if (savedRadiusKm != null) {
+        // Convert saved kilometers to miles
+        final double radiusMiles = savedRadiusKm * 0.621371;
+        state = state.copyWith(radiusMiles: radiusMiles);
       }
     } catch (e) {
       // If loading fails, keep the default value
@@ -83,10 +85,12 @@ class AlertsViewModel extends StateNotifier<AlertsState> {
     }
   }
 
-  Future<void> updateRadius(double kilometers) async {
-    state = state.copyWith(radiusKilometers: kilometers);
+  Future<void> updateRadius(double miles) async {
+    state = state.copyWith(radiusMiles: miles);
     try {
-      await UserService.updateAlertRadius(kilometers);
+      // Convert miles to kilometers for storage
+      final double radiusKm = miles * 1.60934;
+      await UserService.updateAlertRadius(radiusKm);
       // Reload alerts with new radius
       _loadFireAlerts();
     } catch (e) {
@@ -210,7 +214,7 @@ class AlertsView extends ConsumerWidget {
                     const _SectionTitle('Alert Radius'),
                     const SizedBox(height: 8),
                     _RadiusCard(
-                      value: s.radiusKilometers,
+                      value: s.radiusMiles,
                       onChanged: (v) => viewModel.updateRadius(v),
                     ),
                     const SizedBox(height: 16),
@@ -333,10 +337,47 @@ class _AlertCard extends StatelessWidget {
   }
 }
 
-class _RadiusCard extends StatelessWidget {
+class _RadiusCard extends StatefulWidget {
   final double value;
   final ValueChanged<double> onChanged;
   const _RadiusCard({required this.value, required this.onChanged});
+
+  @override
+  State<_RadiusCard> createState() => _RadiusCardState();
+}
+
+class _RadiusCardState extends State<_RadiusCard> {
+  late double _tempValue;
+  bool _hasUnsavedChanges = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(_RadiusCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _tempValue = widget.value;
+      _hasUnsavedChanges = false;
+    }
+  }
+
+  void _onSliderChanged(double newValue) {
+    setState(() {
+      _tempValue = newValue;
+      _hasUnsavedChanges = _tempValue != widget.value;
+    });
+  }
+
+  void _onSave() {
+    widget.onChanged(_tempValue);
+    setState(() {
+      _hasUnsavedChanges = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -353,7 +394,7 @@ class _RadiusCard extends StatelessWidget {
             children: [
               const Text('Within', style: TextStyle(color: AppPalette.white, fontSize: 16, fontWeight: FontWeight.w600)),
               const Spacer(),
-              Text('${value.toStringAsFixed(0)} km', style: const TextStyle(color: AppPalette.orange, fontSize: 14, fontWeight: FontWeight.w700)),
+              Text('${_tempValue.toStringAsFixed(0)} mi', style: const TextStyle(color: AppPalette.orange, fontSize: 14, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 12),
@@ -366,11 +407,35 @@ class _RadiusCard extends StatelessWidget {
             ),
             child: Slider(
               min: 1,
-              max: 80,
-              value: value.clamp(1, 80),
-              onChanged: onChanged,
+              max: 50, // 50 miles max (roughly 80 km)
+              value: _tempValue.clamp(1, 50),
+              onChanged: _onSliderChanged,
             ),
           ),
+          if (_hasUnsavedChanges) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _onSave,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppPalette.orange,
+                  foregroundColor: AppPalette.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Save & Update Alerts',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
