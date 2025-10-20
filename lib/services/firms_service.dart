@@ -426,7 +426,7 @@ class FIRMSService {
 
       print('🌍 FIRMS API Request: $url');
       final response = await http.get(Uri.parse(url));
-      dev.log('FIRMS API Response Code: ${response.body}');
+      // dev.log('FIRMS API Response Code: ${response.body}');
 
       if (response.statusCode == 200) {
         print('✅ Successfully fetched fire data');

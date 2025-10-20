@@ -528,7 +528,7 @@ class _MapViewState extends ConsumerState<MapView> {
               // Enhanced information
               if (distanceFromUser != null) ...[
                 const Divider(height: 20),
-                _buildDetailRow('📏 Distance from You', '${distanceFromUser.toStringAsFixed(1)} km'),
+                _buildDetailRow('📏 Distance from You', '${(distanceFromUser! * 0.621371).toStringAsFixed(1)} miles'),
               ],
               _buildDetailRow('🚨 Safety Level', _getUserFriendlyRiskLevel(riskLevel)),
               _buildDetailRow('🏃 Safe Direction', 'Head $evacuationDirection'),
@@ -638,9 +638,11 @@ class _MapViewState extends ConsumerState<MapView> {
     
     // Distance scoring (closer = higher risk)
     if (distanceFromUser != null) {
-      if (distanceFromUser < 5.0) riskScore += 3;
-      else if (distanceFromUser < 15.0) riskScore += 2;
-      else if (distanceFromUser < 30.0) riskScore += 1;
+      // Convert km to miles for risk assessment
+      final distanceMiles = distanceFromUser * 0.621371;
+      if (distanceMiles < 3.1) riskScore += 3; // < 5 km
+      else if (distanceMiles < 9.3) riskScore += 2; // < 15 km
+      else if (distanceMiles < 18.6) riskScore += 1; // < 30 km
     }
     
     // Determine risk level

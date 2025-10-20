@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
+import 'notification_service.dart';
 
 class UserService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -32,24 +33,8 @@ class UserService {
 
   static Future<String?> requestNotificationPermissionAndToken() async {
     try {
-      final FirebaseMessaging messaging = FirebaseMessaging.instance;
-      final NotificationSettings settings = await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        announcement: false,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-      );
-      dev.log('[UserService] Notification permission status: ${settings.authorizationStatus}');
-      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional) {
-        final String? token = await messaging.getToken();
-        dev.log('[UserService] FCM token: $token');
-        return token;
-      }
-      return null;
+      // Use the centralized notification service
+      return await NotificationService().getFCMToken();
     } catch (e) {
       dev.log('[UserService] requestNotificationPermissionAndToken error: $e');
       return null;

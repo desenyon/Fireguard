@@ -8,56 +8,37 @@ import 'providers/auth_provider.dart';
 import 'ui/auth/login_view.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:geolocator/geolocator.dart';
+import 'services/permission_service.dart';
 import 'services/user_service.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  // Request location permissions
-  await _requestLocationPermissions();
-
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // await FIRMSService.fetchFireData();
   }
+  
+  // Initialize notification service
+  await NotificationService().initialize();
+  
   runApp(const ProviderScope(child: MyApp()));
-}
-
-Future<void> _requestLocationPermissions() async {
-  await Geolocator.requestPermission();
-  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    print('Location services are disabled.');
-    return;
-  }
-
-  // Check location permissions
-  LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      print('Location permissions are denied');
-      return;
-    }
-  }
-
-  if (permission == LocationPermission.deniedForever) {
-    print('Location permissions are permanently denied');
-    return;
-  }
-
-  print('Location permissions granted');
 }
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
-
+Future<void> _requestPermissions(BuildContext context) async {
+    await PermissionService.requestStartupPermissions(context);
+  }
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Request permissions after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestPermissions(context);
+    });
     final ThemeData baseDark = ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
@@ -158,4 +139,6 @@ class AuthWrapper extends ConsumerWidget {
       ),
     );
   }
+
+  
 }

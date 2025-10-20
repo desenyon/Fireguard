@@ -24,6 +24,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -65,6 +66,7 @@ android {
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-auth")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5") 
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 }
 

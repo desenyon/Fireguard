@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dart_geohash/dart_geohash.dart';
+import 'notification_service.dart';
 
 class UserPresenceService {
   UserPresenceService._();
@@ -18,7 +19,7 @@ class UserPresenceService {
     required double latitude,
     required double longitude,
   }) async {
-    final String? token = await _messaging.getToken();
+    final String? token = await NotificationService().getFCMToken();
     if (token == null) return;
 
     final String geohash = GeoHasher().encode(latitude, longitude, precision: 9);

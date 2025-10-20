@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import '../models/fire_hotspot.dart';
 import 'firms_service.dart';
 import 'user_service.dart';
+import 'user_reports_service.dart';
 
 class FireAlert {
   final String id;
@@ -14,6 +15,8 @@ class FireAlert {
   final DateTime detectedAt;
   final String description;
   final bool isNearby;
+  final String type; // 'satellite' or 'user_report'
+  final String? reporterEmail; // For user reports
 
   FireAlert({
     required this.id,
@@ -25,6 +28,8 @@ class FireAlert {
     required this.detectedAt,
     required this.description,
     required this.isNearby,
+    required this.type,
+    this.reporterEmail,
   });
 
   static Future<FireAlert> fromFireHotspot(FireHotspot hotspot, double userLat, double userLon, double alertRadius) async {
@@ -32,7 +37,7 @@ class FireAlert {
     final isNearby = distance <= alertRadius;
     
     return FireAlert(
-      id: '${hotspot.latitude}_${hotspot.longitude}_${hotspot.acqDate}',
+      id: 'satellite_${hotspot.latitude}_${hotspot.longitude}_${hotspot.acqDate}',
       name: await hotspot.fireName,
       latitude: hotspot.latitude,
       longitude: hotspot.longitude,
@@ -41,6 +46,23 @@ class FireAlert {
       detectedAt: DateTime.now(), // You could parse hotspot.acqDate if needed
       description: 'Fire detected via satellite',
       isNearby: isNearby,
+      type: 'satellite',
+    );
+  }
+
+  static FireAlert fromUserReport(UserReport report) {
+    return FireAlert(
+      id: 'user_${report.id}',
+      name: 'Community Report - ${report.reporterName}',
+      latitude: report.latitude,
+      longitude: report.longitude,
+      distanceKm: report.distanceKm,
+      severity: 'High', // User reports are considered high priority
+      detectedAt: report.createdAt,
+      description: report.description,
+      isNearby: report.isNearby,
+      type: 'user_report',
+      reporterEmail: report.reportedByEmail,
     );
   }
 
@@ -98,13 +120,18 @@ class FireAlertsService {
         await _updateFireData(userLat, userLon, alertRadius);
       }
 
-      // Filter to show only nearby fires by default
-      final nearbyAlerts = _currentAlerts.where((alert) => alert.isNearby).toList();
+      // Get both satellite and user report alerts
+      final satelliteAlerts = _currentAlerts.where((alert) => alert.isNearby).toList();
+      final userReports = await UserReportsService.getUserReports(userLat: userLat, userLon: userLon);
+      final userReportAlerts = userReports.map((report) => FireAlert.fromUserReport(report)).toList();
+
+      // Combine all alerts
+      final allAlerts = [...satelliteAlerts, ...userReportAlerts];
       
       // Sort by distance (closest first)
-      nearbyAlerts.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+      allAlerts.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
       
-      return nearbyAlerts;
+      return allAlerts;
     } catch (e) {
       log('[FireAlertsService] Error getting fire alerts: $e');
       return [];
@@ -165,6 +192,7 @@ class FireAlertsService {
 
   static Future<void> refreshAlerts() async {
     _lastUpdate = null; // Force refresh on next request
+    await UserReportsService.refreshReports(); // Also refresh user reports
   }
 
   static List<FireAlert> getCachedAlerts() {

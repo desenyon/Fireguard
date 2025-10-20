@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatf
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:fireguard/firebase_options.dart';
+import 'package:fireguard/services/user_service.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   // Guard flag to avoid overlapping interactive sign-in flows.
@@ -141,12 +142,24 @@ class AuthService {
   final credential = GoogleAuthProvider.credential(idToken: fallbackToken);
         final credResult = await _auth.signInWithCredential(credential);
         dev.log('[AuthService] Firebase sign-in success via fallback user=${credResult.user?.uid}');
+        // Ensure user document is upserted on successful sign-in
+        try {
+          await UserService.syncSignedInUser();
+        } catch (e) {
+          dev.log('[AuthService] Failed to sync user after fallback sign-in: $e');
+        }
         return credResult;
       }
 
       final credential = GoogleAuthProvider.credential(idToken: idToken);
       final credResult = await _auth.signInWithCredential(credential);
       dev.log('[AuthService] Firebase sign-in success user=${credResult.user?.uid} email=${credResult.user?.email}');
+      // Ensure user document is upserted on successful sign-in
+      try {
+        await UserService.syncSignedInUser();
+      } catch (e) {
+        dev.log('[AuthService] Failed to sync user after sign-in: $e');
+      }
       return credResult;
       
     } on GoogleSignInException catch (e) {

@@ -11,6 +11,8 @@ class AlertItem {
   final double kilometersAway;
   final String severity;
   final String id;
+  final String type; // 'satellite' or 'user_report'
+  final String? reporterEmail;
 
   const AlertItem({
     required this.name, 
@@ -18,6 +20,8 @@ class AlertItem {
     required this.kilometersAway,
     required this.severity,
     required this.id,
+    required this.type,
+    this.reporterEmail,
   });
 
   factory AlertItem.fromFireAlert(FireAlert alert) {
@@ -27,6 +31,8 @@ class AlertItem {
       kilometersAway: alert.distanceKm,
       severity: alert.severity,
       id: alert.id,
+      type: alert.type,
+      reporterEmail: alert.reporterEmail,
     );
   }
 }
@@ -183,7 +189,7 @@ class AlertsView extends ConsumerWidget {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    const _SectionTitle('Nearby Fire Alerts'),
+                    const _SectionTitle('Fire Alerts & Community Reports'),
                     const SizedBox(height: 8),
                     if (s.alerts.isEmpty)
                       Container(
@@ -197,7 +203,7 @@ class AlertsView extends ConsumerWidget {
                             Icon(Icons.check_circle_outline, color: AppPalette.green, size: 48),
                             SizedBox(height: 16),
                             Text(
-                              'No fire alerts in your area',
+                              'No fire alerts or community reports in your area',
                               style: TextStyle(color: AppPalette.white, fontSize: 16),
                             ),
                             SizedBox(height: 8),
@@ -253,18 +259,30 @@ class _AlertCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppPalette.mediumGray,
         borderRadius: BorderRadius.circular(16),
+        border: item.type == 'user_report' 
+            ? Border.all(color: AppPalette.orange.withOpacity(0.3), width: 1)
+            : null,
       ),
       child: Row(
         children: [
           Container(
             width: 48,
             height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0x33FF6B00),
+            decoration: BoxDecoration(
+              color: item.type == 'user_report' 
+                  ? const Color(0x33FF6B00)
+                  : const Color(0x33FF6B00),
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Icon(Icons.local_fire_department, color: AppPalette.orange),
+            child: Center(
+              child: Icon(
+                item.type == 'user_report' 
+                    ? Icons.people 
+                    : Icons.satellite_alt,
+                color: item.type == 'user_report' 
+                    ? AppPalette.orange 
+                    : AppPalette.orange,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -272,9 +290,31 @@ class _AlertCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.name,
-                  style: const TextStyle(color: AppPalette.white, fontSize: 16, fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(color: AppPalette.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    if (item.type == 'user_report')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppPalette.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'COMMUNITY',
+                          style: TextStyle(
+                            color: AppPalette.orange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Row(
@@ -299,6 +339,13 @@ class _AlertCard extends StatelessWidget {
                       item.updatedAgo,
                       style: const TextStyle(color: AppPalette.lightGrayLight, fontSize: 13),
                     ),
+                    if (item.type == 'user_report' && item.reporterEmail != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'by ${item.reporterEmail!.split('@')[0]}',
+                        style: const TextStyle(color: AppPalette.lightGrayLight, fontSize: 12),
+                      ),
+                    ],
                   ],
                 ),
               ],
