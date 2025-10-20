@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/permission_service.dart';
 import 'services/user_service.dart';
 import 'services/notification_service.dart';
+import 'services/user_presence_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,6 +87,10 @@ class AuthWrapper extends ConsumerWidget {
         if (user != null) {
           // Kick off background sync of user record (email, location, token)
           UserService.syncSignedInUser();
+          
+          // Also save to user_presence for notifications
+          _saveUserPresence(user.uid);
+          
           return const AppShell();
         } else {
           return const LoginView();
@@ -140,5 +145,19 @@ class AuthWrapper extends ConsumerWidget {
     );
   }
 
-  
+  void _saveUserPresence(String uid) async {
+    try {
+      final position = await UserService.getCurrentPositionSafely();
+      if (position != null) {
+        await UserPresenceService.instance.savePresence(
+          uid: uid,
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      }
+    } catch (e) {
+      // Silently fail - this is not critical for app functionality
+      print('Failed to save user presence: $e');
+    }
+  }
 }
