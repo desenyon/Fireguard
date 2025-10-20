@@ -469,7 +469,7 @@ class _MapViewState extends ConsumerState<MapView> {
     return Colors.green;
   }
 
-  void _showFireDetails(FireHotspot hotspot) {
+  void _showFireDetails(FireHotspot hotspot) async {
     // Calculate distance from user location
     double? distanceFromUser;
     if (userLocation != null) {
@@ -486,6 +486,9 @@ class _MapViewState extends ConsumerState<MapView> {
 
     // Calculate risk assessment
     String riskLevel = _calculateRiskAssessment(hotspot, distanceFromUser);
+
+    // Get fire name asynchronously
+    final fireName = await hotspot.fireName;
 
     showDialog(
       context: context,
@@ -516,13 +519,11 @@ class _MapViewState extends ConsumerState<MapView> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('🔥 Fire Name', hotspot.fireName),
+              _buildDetailRow('🔥 Fire Name', fireName),
               _buildDetailRow('📍 Coordinates', 
                   '${hotspot.latitude.toStringAsFixed(4)}, ${hotspot.longitude.toStringAsFixed(4)}'),
               _buildDetailRow('🔥 Fire Size', _getFireSizeDescription(hotspot.frp)),
-              _buildDetailRow('✅ How Reliable', _getConfidenceDescription(hotspot.confidence)),
               _buildDetailRow('📅 Detected On', _formatDate(hotspot.acqDate)),
-              _buildDetailRow('🕐 Time', _formatTime(hotspot.acqTime)),
               
               // Enhanced information
               if (distanceFromUser != null) ...[
@@ -697,18 +698,6 @@ class _MapViewState extends ConsumerState<MapView> {
     return 'Small Fire (Minimal Danger)';
   }
 
-  String _getConfidenceDescription(String confidence) {
-    switch (confidence.toLowerCase()) {
-      case 'high':
-        return 'Very Reliable (99% sure it\'s a fire)';
-      case 'nominal':
-        return 'Reliable (95% sure it\'s a fire)';
-      case 'low':
-        return 'Uncertain (80% sure it\'s a fire)';
-      default:
-        return 'Unknown';
-    }
-  }
 
   String _formatDate(String dateStr) {
     try {
@@ -726,22 +715,6 @@ class _MapViewState extends ConsumerState<MapView> {
     }
   }
 
-  String _formatTime(String timeStr) {
-    try {
-      // Assuming time format is HHMM (24-hour)
-      if (timeStr.length == 4) {
-        final hours = timeStr.substring(0, 2);
-        final minutes = timeStr.substring(2, 4);
-        final hourInt = int.parse(hours);
-        final period = hourInt >= 12 ? 'PM' : 'AM';
-        final displayHour = hourInt > 12 ? hourInt - 12 : (hourInt == 0 ? 12 : hourInt);
-        return '$displayHour:${minutes} $period';
-      }
-      return timeStr;
-    } catch (e) {
-      return timeStr;
-    }
-  }
 
   String _getUserFriendlyRiskLevel(String riskLevel) {
     switch (riskLevel) {

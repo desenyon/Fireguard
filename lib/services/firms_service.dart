@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
@@ -127,13 +127,13 @@ class FIRMSService {
               realFireCount++;
               filteredHotspots.add(hotspot);
               
-            //   print('🔥 Fire #$realFireCount: '
-            //       'Lat: ${hotspot.latitude.toStringAsFixed(4)}, '
-            //       'Lon: ${hotspot.longitude.toStringAsFixed(4)} | '
-            //       'Confidence: ${hotspot.confidence}, '
-            //       'FRP: ${hotspot.frp.toStringAsFixed(2)} MW, '
-            //       'Intensity: ${hotspot.intensityLevel}');
-            //
+              print('🔥 Fire #$realFireCount: '
+                  'Lat: ${hotspot.latitude.toStringAsFixed(4)}, '
+                  'Lon: ${hotspot.longitude.toStringAsFixed(4)} | '
+                  'Confidence: ${hotspot.confidence}, '
+                  'FRP: ${hotspot.frp.toStringAsFixed(2)} MW, '
+                  'Intensity: ${hotspot.intensityLevel}');
+            
              }
           } catch (e) {
             print('❌ Error parsing line $i: $e');
@@ -426,6 +426,7 @@ class FIRMSService {
 
       print('🌍 FIRMS API Request: $url');
       final response = await http.get(Uri.parse(url));
+      dev.log('FIRMS API Response Code: ${response.body}');
 
       if (response.statusCode == 200) {
         print('✅ Successfully fetched fire data');

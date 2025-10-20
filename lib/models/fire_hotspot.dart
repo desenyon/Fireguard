@@ -1,3 +1,5 @@
+import '../services/geocoding_service.dart';
+
 class FireHotspot {
   final double latitude;
   final double longitude;
@@ -50,9 +52,7 @@ class FireHotspot {
 
   // Parse LANDSAT_NRT CSV (different schema, fewer columns)
   factory FireHotspot.fromLandsatCsv(List<String> fields) {
-    // Expected order:
-    // 0:lat, 1:lon, 2:path, 3:row, 4:scan, 5:track, 6:acq_date, 7:acq_time,
-    // 8:satellite, 9:confidence (L/N/H), 10:daynight
+   
     return FireHotspot(
       latitude: double.parse(fields[0]),
       longitude: double.parse(fields[1]),
@@ -83,14 +83,17 @@ class FireHotspot {
 
   // Check if this is likely a real fire
   bool get isRealFire {
-    // High confidence fires only
+    // High confidence fires are always considered real
     if (confidence == 'high') return true;
     
-    // // Nominal confidence with high FRP (intense fire)
-    // if (confidence == 'nominal' && frp > 10.0) return true;
+    // Nominal confidence fires with significant FRP (intense fire)
+    if (confidence == 'nominal' && frp > 5.0) return true;
     
-    // // // Very hot fires (likely wildfires)
-    if (brightness > 366.0) return true;
+    // Very hot fires (likely wildfires) - brightness > 350K indicates intense heat
+    if (brightness > 350.0) return true;
+    
+    // Low confidence fires with very high FRP (extreme intensity)
+    if (confidence == 'low' && frp > 20.0) return true;
     
     return false;
   }
@@ -111,103 +114,33 @@ class FireHotspot {
     return 'green';
   }
 
-  // Generate a descriptive fire name based on characteristics
-  String get fireName {
-    final String size = _getFireSizeName();
-    final String location = _getLocationName();
-    final String time = _getTimeOfDay();
+  // Generate a descriptive fire name based on location
+  Future<String> get fireName async {
+    final String location = await GeocodingService.getLocationName(latitude, longitude);
+    final String intensity = _getFireIntensityDescriptor();
     
-    return '$size Fire near $location ($time)';
+    return '$location $intensity Fire';
   }
 
-  String _getFireSizeName() {
-    if (frp > 50.0) return 'Major';
-    if (frp > 20.0) return 'Large';
-    if (frp > 10.0) return 'Medium';
-    return 'Small';
+  String _getFireIntensityDescriptor() {
+    if (frp > 50.0) return 'Wildfire';
+    if (frp > 20.0) return 'Fire';
+    if (frp > 10.0) return 'Fire';
+    if (confidence == 'high') return 'Fire';
+    return 'Thermal Anomaly';
   }
 
-  String _getLocationName() {
-    // Generate more specific location names based on coordinates
-    final double lat = latitude.abs();
-    final double lon = longitude.abs();
-    
-    // Generate region-based names with more detail
-    if (latitude > 60) {
-      if (longitude > -180 && longitude < -120) return 'Alaska/Northern Canada';
-      if (longitude > -120 && longitude < -60) return 'Northern Canada';
-      if (longitude > -60 && longitude < 0) return 'Northern Europe';
-      if (longitude > 0 && longitude < 60) return 'Northern Russia';
-      if (longitude > 60 && longitude < 120) return 'Siberia';
-      if (longitude > 120 && longitude < 180) return 'Northern Asia';
-      return 'Arctic Region';
-    }
-    
-    if (latitude > 40) {
-      if (longitude > -180 && longitude < -120) return 'Western North America';
-      if (longitude > -120 && longitude < -80) return 'Central North America';
-      if (longitude > -80 && longitude < -40) return 'Eastern North America';
-      if (longitude > -40 && longitude < 0) return 'Northern Atlantic';
-      if (longitude > 0 && longitude < 40) return 'Europe';
-      if (longitude > 40 && longitude < 80) return 'Central Asia';
-      if (longitude > 80 && longitude < 120) return 'Eastern Asia';
-      if (longitude > 120 && longitude < 180) return 'Pacific Region';
-      return 'Northern Region';
-    }
-    
-    if (latitude > 20) {
-      if (longitude > -180 && longitude < -120) return 'Western North America';
-      if (longitude > -120 && longitude < -80) return 'Southwestern USA';
-      if (longitude > -80 && longitude < -40) return 'Southeastern USA';
-      if (longitude > -40 && longitude < 0) return 'Atlantic Ocean';
-      if (longitude > 0 && longitude < 40) return 'Mediterranean';
-      if (longitude > 40 && longitude < 80) return 'Middle East/Central Asia';
-      if (longitude > 80 && longitude < 120) return 'Eastern Asia';
-      if (longitude > 120 && longitude < 180) return 'Western Pacific';
-      return 'Subtropical Region';
-    }
-    
-    if (latitude > 0) {
-      if (longitude > -180 && longitude < -120) return 'Pacific Ocean';
-      if (longitude > -120 && longitude < -80) return 'Central America';
-      if (longitude > -80 && longitude < -40) return 'Caribbean';
-      if (longitude > -40 && longitude < 0) return 'Atlantic Ocean';
-      if (longitude > 0 && longitude < 40) return 'Africa';
-      if (longitude > 40 && longitude < 80) return 'Indian Ocean';
-      if (longitude > 80 && longitude < 120) return 'Southeast Asia';
-      if (longitude > 120 && longitude < 180) return 'Pacific Ocean';
-      return 'Tropical Region';
-    }
-    
-    if (latitude > -20) {
-      if (longitude > -180 && longitude < -120) return 'Pacific Ocean';
-      if (longitude > -120 && longitude < -80) return 'South America';
-      if (longitude > -80 && longitude < -40) return 'South America';
-      if (longitude > -40 && longitude < 0) return 'South Atlantic';
-      if (longitude > 0 && longitude < 40) return 'Southern Africa';
-      if (longitude > 40 && longitude < 80) return 'Indian Ocean';
-      if (longitude > 80 && longitude < 120) return 'Australia';
-      if (longitude > 120 && longitude < 180) return 'Pacific Ocean';
-      return 'Subtropical Region';
-    }
-    
-    if (latitude > -40) {
-      if (longitude > -180 && longitude < -120) return 'Pacific Ocean';
-      if (longitude > -120 && longitude < -80) return 'Southern South America';
-      if (longitude > -80 && longitude < -40) return 'Southern South America';
-      if (longitude > -40 && longitude < 0) return 'South Atlantic';
-      if (longitude > 0 && longitude < 40) return 'Southern Africa';
-      if (longitude > 40 && longitude < 80) return 'Indian Ocean';
-      if (longitude > 80 && longitude < 120) return 'Southern Australia';
-      if (longitude > 120 && longitude < 180) return 'Pacific Ocean';
-      return 'Southern Region';
-    }
-    
-    return 'Antarctic Region';
-  }
 
   String _getTimeOfDay() {
     try {
+      final intValue = int.parse(acqTime);
+      
+      // If acqTime is a day of year (1-365), use dayNight field instead
+      if (intValue >= 1 && intValue <= 365) {
+        return dayNight == 'D' ? 'Day' : 'Night';
+      }
+      
+      // If it's actual time format (HHMM)
       if (acqTime.length >= 4) {
         final hour = int.parse(acqTime.substring(0, 2));
         if (hour >= 6 && hour < 12) return 'Morning';

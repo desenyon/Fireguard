@@ -27,13 +27,13 @@ class FireAlert {
     required this.isNearby,
   });
 
-  factory FireAlert.fromFireHotspot(FireHotspot hotspot, double userLat, double userLon, double alertRadius) {
+  static Future<FireAlert> fromFireHotspot(FireHotspot hotspot, double userLat, double userLon, double alertRadius) async {
     final distance = _calculateDistance(userLat, userLon, hotspot.latitude, hotspot.longitude);
     final isNearby = distance <= alertRadius;
     
     return FireAlert(
       id: '${hotspot.latitude}_${hotspot.longitude}_${hotspot.acqDate}',
-      name: hotspot.fireName,
+      name: await hotspot.fireName,
       latitude: hotspot.latitude,
       longitude: hotspot.longitude,
       distanceKm: distance,
@@ -120,9 +120,11 @@ class FireAlertsService {
       log('[FireAlertsService] Fetched ${hotspots.length} fire hotspots');
 
       // Convert to alerts
-      _currentAlerts = hotspots.map((hotspot) {
-        return FireAlert.fromFireHotspot(hotspot, userLat, userLon, alertRadius);
-      }).toList();
+      _currentAlerts = await Future.wait(
+        hotspots.map((hotspot) {
+          return FireAlert.fromFireHotspot(hotspot, userLat, userLon, alertRadius);
+        })
+      );
 
       _lastUpdate = DateTime.now();
       log('[FireAlertsService] Updated ${_currentAlerts.length} fire alerts');
